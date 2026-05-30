@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keuangan IMDA</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="toast-container"></div>
+
+    <div class="app-container">
+        <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-mosque"></i>
+                <h2>IMDA Finance</h2>
+                <button class="close-btn" onclick="closeSidebar()"><i class="fas fa-times"></i></button>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-btn active" onclick="showSection('dashboard', this)"><i class="fas fa-chart-pie"></i> Dashboard</button>
+                <button class="nav-btn" onclick="showSection('bayar', this)"><i class="fas fa-money-check-dollar"></i> Bayar IMDA</button>
+                <button class="nav-btn" onclick="showSection('setbiaya', this)"><i class="fas fa-sliders"></i> Set Biaya</button>
+                <button class="nav-btn" onclick="showSection('belanja', this)"><i class="fas fa-cart-shopping"></i> Belanja</button>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <button class="hamburger-btn" onclick="openSidebar()"><i class="fas fa-bars"></i></button>
+
+            <!-- DASHBOARD -->
+            <div id="dashboard" class="section active">
+                <div class="page-header">
+                    <h2>Dashboard</h2>
+                    <p>Ringkasan keuangan dan status pembayaran</p>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card income">
+                        <div class="stat-icon"><i class="fas fa-arrow-trend-up"></i></div>
+                        <div class="stat-info"><span>Pemasukan</span><h3 id="totalIn">Rp 0</h3></div>
+                    </div>
+                    <div class="stat-card expense">
+                        <div class="stat-icon"><i class="fas fa-arrow-trend-down"></i></div>
+                        <div class="stat-info"><span>Pengeluaran</span><h3 id="totalOut">Rp 0</h3></div>
+                    </div>
+                    <div class="stat-card balance">
+                        <div class="stat-icon"><i class="fas fa-wallet"></i></div>
+                        <div class="stat-info"><span>Sisa Uang</span><h3 id="saldo">Rp 0</h3></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><h3><i class="fas fa-users"></i> Rekap Murid per Kelas</h3></div>
+                    <div class="table-responsive">
+                        <table id="dashboardTable">
+                            <thead><tr><th>Kelas</th><th>Sudah Bayar</th><th>Belum Bayar</th><th>Total Murid</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BAYAR IMDA -->
+            <div id="bayar" class="section">
+                <div class="page-header">
+                    <h2>Pembayaran IMDA</h2>
+                    <p>Ceklis murid yang sudah melakukan pembayaran</p>
+                </div>
+                <div class="card">
+                    <div class="filter-group">
+                        <div class="input-group">
+                            <label>Pilih Kelas</label>
+                            <select id="filterKelas">
+                                <option value="">-- Pilih --</option>
+                                <option value="1">Kelas 1</option><option value="2">Kelas 2</option><option value="3">Kelas 3</option>
+                                <option value="4">Kelas 4</option><option value="5">Kelas 5</option><option value="6">Kelas 6</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Jenis Kelamin</label>
+                            <select id="filterGender">
+                                <option value="">-- Semua --</option>
+                                <option value="LAKI - LAKI">Laki-laki</option>
+                                <option value="PEREMPUAN">Perempuan</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Jenis IMDA</label>
+                            <select id="filterImda">
+                                <option value="">-- Pilih --</option>
+                                <option value="I">IMDA I</option><option value="II">IMDA II</option><option value="III">IMDA III</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="loadStudents()"><i class="fas fa-search"></i> Tampilkan</button>
+                    </div>
+                    
+                    <div id="imdaView" style="display:none; margin-top:20px;">
+                        <div class="imda-header">
+                            <h3 id="imdaTitle"><i class="fas fa-file-invoice-dollar"></i></h3>
+                            <span id="imdaNominal" class="badge badge-blue"></span>
+                        </div>
+                        <div class="table-responsive">
+                            <table id="studentTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50px;"><input type="checkbox" id="checkAll" onclick="toggleAll(this)"></th>
+                                        <th>Nama Murid</th>
+                                        <th>L/P</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="action-bar">
+                            <button class="btn btn-success" onclick="processPayment()"><i class="fas fa-check-circle"></i> Proses Pembayaran</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SET BIAYA (INPUT SUDAH DIUBAH) -->
+            <div id="setbiaya" class="section">
+                <div class="page-header">
+                    <h2>Set Biaya IMDA</h2>
+                    <p>Isi nominal biaya untuk setiap kelas dan jenjang</p>
+                </div>
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="fee-table">
+                            <thead><tr><th>Kelas</th><th>IMDA I (Rp)</th><th>IMDA II (Rp)</th><th>IMDA III (Rp)</th></tr></thead>
+                            <tbody>
+                                <tr><td><strong>Kelas 1</strong></td><td><input type="text" inputmode="numeric" id="fee_1_I" class="fee-input currency-input" placeholder="0"></td><td><input type="text" inputmode="numeric" id="fee_1_II" class="fee-input currency-input" placeholder="0"></td><td><input type="text" inputmode="numeric" id="fee_1_III" class="fee-input currency-input" placeholder="0"></td></tr>
+                                <tr><td><strong>Kelas 2</strong></td><td><input type="text" inputmode="numeric" id="fee_2_I" class="fee-input currency-input" placeholder="0"></td><td><input type="text" inputmode="numeric" id="fee_2_II" class="fee-input currency-input" placeholder="0"></td><td><input type="text" inputmode="numeric" id="fee_2_III" class="fee-input currency-input" placeholder="0"></td></tr>
+                                <tr><td><strong>Kelas 3</strong></td><td><input type="text" inputmode="numeric" id="fee_3_I" class="fee-input currency-input" placeholder="0"></td><td><input type="text" inputmode="numeric" id="fee_3_II" class="fee-input currency-input" placeholder="0"></td><td><input type="text" inputmode="numeric" id="fee_3_III" class="fee-input currency-input" placeholder="0"></td></tr>
+                                <tr><td><strong>Kelas 4</strong></td><td><input type="text" inputmode="numeric" id="fee_4_I" class="fee-input currency-input" placeholder="0"></td><td><input type="text" inputmode="numeric" id="fee_4_II" class="fee-input currency-input" placeholder="0"></td><td><input type="text" inputmode="numeric" id="fee_4_III" class="fee-input currency-input" placeholder="0"></td></tr>
+                                <tr><td><strong>Kelas 5</strong></td><td><input type="text" inputmode="numeric" id="fee_5_I" class="fee-input currency-input" placeholder="0"></td><td><input type="text" inputmode="numeric" id="fee_5_II" class="fee-input currency-input" placeholder="0"></td><td><input type="text" inputmode="numeric" id="fee_5_III" class="fee-input currency-input" placeholder="0"></td></tr>
+                                <tr><td><strong>Kelas 6</strong></td><td><input type="text" inputmode="numeric" id="fee_6_I" class="fee-input currency-input" placeholder="0"></td><td><input type="text" inputmode="numeric" id="fee_6_II" class="fee-input currency-input" placeholder="0"></td><td><input type="text" inputmode="numeric" id="fee_6_III" class="fee-input currency-input" placeholder="0"></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="action-bar">
+                        <button class="btn btn-primary" onclick="saveAllFees()"><i class="fas fa-save"></i> Simpan Semua Biaya</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BELANJA (INPUT SUDAH DIUBAH) -->
+            <div id="belanja" class="section">
+                <div class="page-header">
+                    <h2>Pengeluaran / Belanja</h2>
+                    <p>Catat pengeluaran yang mengurangi saldo kas</p>
+                </div>
+                <div class="card">
+                    <div class="filter-group">
+                        <div class="input-group" style="flex: 2;">
+                            <label>Keterangan Belanja</label>
+                            <input type="text" id="expenseDesc" placeholder="Contoh: Beli ATK">
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label>Nominal (Rp)</label>
+                            <input type="text" inputmode="numeric" id="expenseAmount" class="currency-input" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="action-bar">
+                        <button class="btn btn-danger" onclick="addExpense()"><i class="fas fa-receipt"></i> Catat Pengeluaran</button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+</body>
+</html>
