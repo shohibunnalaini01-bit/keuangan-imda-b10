@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -35,10 +36,14 @@
 
             <!-- DASHBOARD -->
             <div id="dashboard" class="section active">
-                <div class="page-header">
-                    <h2>Dashboard</h2>
-                    <p>Ringkasan keuangan dan status pembayaran</p>
+                <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <h2>Dashboard</h2>
+                        <p>Ringkasan keuangan dan status pembayaran</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> Export Excel</button>
                 </div>
+                
                 <div class="stats-grid">
                     <div class="stat-card income">
                         <div class="stat-icon"><i class="fas fa-arrow-trend-up"></i></div>
@@ -53,11 +58,44 @@
                         <div class="stat-info"><span>Sisa Uang</span><h3 id="saldo">Rp 0</h3></div>
                     </div>
                 </div>
+                
+                <!-- CARD REKAP DENGAN FILTER IMDA -->
                 <div class="card">
-                    <div class="card-header"><h3><i class="fas fa-users"></i> Rekap Murid per Kelas</h3></div>
+                    <div class="card-header">
+                        <h3><i class="fas fa-users"></i> Rekap Murid per Kelas</h3>
+                        <select id="recapFilterImda" onchange="loadDashboard()" class="filter-inline">
+                            <option value="ALL">Semua IMDA</option>
+                            <option value="I">IMDA I</option>
+                            <option value="II">IMDA II</option>
+                            <option value="III">IMDA III</option>
+                        </select>
+                    </div>
                     <div class="table-responsive">
                         <table id="dashboardTable">
-                            <thead><tr><th>Kelas</th><th>Sudah Bayar</th><th>Belum Bayar</th><th>Total Murid</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th>Kelas</th>
+                                    <th>Laki-laki (Sdh/Blm)</th>
+                                    <th>Perempuan (Sdh/Blm)</th>
+                                    <th>Total Murid</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header"><h3><i class="fas fa-clock-rotate-left"></i> Riwayat Transaksi</h3></div>
+                    <div class="table-responsive">
+                        <table id="historyTable">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Keterangan</th>
+                                    <th style="text-align: right;">Nominal</th>
+                                </tr>
+                            </thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -123,7 +161,7 @@
                 </div>
             </div>
 
-            <!-- SET BIAYA (INPUT SUDAH DIUBAH) -->
+            <!-- SET BIAYA -->
             <div id="setbiaya" class="section">
                 <div class="page-header">
                     <h2>Set Biaya IMDA</h2>
@@ -149,7 +187,7 @@
                 </div>
             </div>
 
-            <!-- BELANJA (INPUT SUDAH DIUBAH) -->
+            <!-- BELANJA -->
             <div id="belanja" class="section">
                 <div class="page-header">
                     <h2>Pengeluaran / Belanja</h2>
