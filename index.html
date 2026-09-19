@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B-10 Payment</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+    <div id="toast-container"></div>
+
+    <!-- SIDEBAR (MODE DESKTOP) -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <img src="https://i.ibb.co.com/k68Qn8my/logo.png" alt="Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="logo-fallback" style="display:none"><i class="fas fa-wallet"></i></div>
+            </div>
+            <div class="brand-text">
+                <h1>B-10 Payment</h1>
+                <p>Keuangan Madrasah</p>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <button class="nav-btn active" data-section="dashboard" onclick="showSection('dashboard')"><i class="fas fa-chart-pie"></i> Dashboard</button>
+            <button class="nav-btn" data-section="bayar" onclick="showSection('bayar')"><i class="fas fa-money-check-dollar"></i> Bayar IMDA</button>
+            <button class="nav-btn" data-section="datamurid" onclick="showSection('datamurid')"><i class="fas fa-user-pen"></i> Data Murid</button>
+            <button class="nav-btn" data-section="setbiaya" onclick="showSection('setbiaya')"><i class="fas fa-sliders"></i> Set Biaya</button>
+            <button class="nav-btn" data-section="belanja" onclick="showSection('belanja')"><i class="fas fa-cart-shopping"></i> Belanja</button>
+        </nav>
+        <div class="sidebar-footer"><p>B-10 Payment &copy; 2026</p></div>
+    </aside>
+
+    <!-- HEADER GRADASI + PATTERN (SALDO, JAM, TANGGAL, HIJRIYAH) -->
+    <header class="topbar">
+        <span class="orb"></span>
+
+        <div class="topbar-brand">
+            <img src="https://i.ibb.co.com/k68Qn8my/logo.png" alt="Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="logo-fallback" style="display:none"><i class="fas fa-wallet"></i></div>
+            <span>B-10 Payment</span>
+        </div>
+
+        <div class="datetime-cluster">
+            <div class="dt-item">
+                <i class="fas fa-clock"></i>
+                <div class="dt-info"><span>Waktu</span><strong id="liveClock">--:--:--</strong></div>
+            </div>
+            <div class="dt-sep"></div>
+            <div class="dt-item">
+                <i class="fas fa-calendar-days"></i>
+                <div class="dt-info"><span>Masehi</span><strong id="liveDate">-</strong></div>
+            </div>
+            <div class="dt-sep"></div>
+            <div class="dt-item">
+                <i class="fas fa-moon"></i>
+                <div class="dt-info"><span>Hijriyah</span><strong id="hijriDate">-</strong></div>
+            </div>
+        </div>
+
+        <div class="saldo-header" title="Sisa Saldo Kas">
+            <i class="fas fa-wallet"></i>
+            <div class="sh-info"><span>Sisa Saldo</span><strong id="saldoHeader">Rp 0</strong></div>
+        </div>
+    </header>
+
+    <main class="content">
+
+        <!-- DASHBOARD -->
+        <div id="dashboard" class="section active">
+            <div class="page-head">
+                <div><h2>Dashboard</h2><p>Ringkasan keuangan dan status pembayaran</p></div>
+                <button class="btn btn-primary" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> Export Excel</button>
+            </div>
+
+            <div class="hero-card">
+                <p class="hero-greeting" id="greeting">Selamat datang 👋</p>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <i class="fas fa-arrow-trend-up"></i>
+                        <div><span>Total Pemasukan</span><strong id="totalIn">Rp 0</strong></div>
+                    </div>
+                    <div class="hero-divider"></div>
+                    <div class="hero-stat">
+                        <i class="fas fa-arrow-trend-down"></i>
+                        <div><span>Total Pengeluaran</span><strong id="totalOut">Rp 0</strong></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><h3><i class="fas fa-users"></i> Rekap Murid per Kelas</h3></div>
+                <div class="table-responsive">
+                    <table id="dashboardTable">
+                        <thead><tr><th>Kelas</th><th>Laki-laki</th><th>Perempuan</th><th>Total</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><h3><i class="fas fa-clock-rotate-left"></i> Transaksi Terakhir</h3></div>
+                <div id="historyList" class="history-list"></div>
+            </div>
+        </div>
+
+        <!-- BAYAR IMDA -->
+        <div id="bayar" class="section">
+            <div class="section-title"><h2>Pembayaran IMDA</h2><p>Ceklis murid yang sudah melakukan pembayaran</p></div>
+            <div class="card">
+                <div class="filter-group">
+                    <div class="input-group">
+                        <label>Pilih Kelas</label>
+                        <select id="filterKelas">
+                            <option value="">-- Pilih --</option>
+                            <option value="1">Kelas 1</option><option value="2">Kelas 2</option><option value="3">Kelas 3</option>
+                            <option value="4">Kelas 4</option><option value="5">Kelas 5</option><option value="6">Kelas 6</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Jenis Kelamin</label>
+                        <select id="filterGender">
+                            <option value="">-- Semua --</option>
+                            <option value="Laki-laki">Laki-laki</option>
+                            <option value="Perempuan">Perempuan</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="loadStudents()"><i class="fas fa-search"></i> Tampilkan</button>
+                </div>
+
+                <div id="imdaView" style="display:none; margin-top:20px;">
+                    <div class="search-bar">
+                        <i class="fas fa-magnifying-glass"></i>
+                        <input type="text" id="searchBayar" oninput="filterBayarTable()" placeholder="Cari nama murid...">
+                    </div>
+                    <div class="imda-header">
+                        <h3 id="imdaTitle"></h3>
+                        <span id="imdaNominal" class="badge"></span>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="studentTable">
+                            <thead>
+                                <tr>
+                                    <th style="width:50px;"><input type="checkbox" id="checkAll" onclick="toggleAll(this)"></th>
+                                    <th>Nama Murid</th><th>L/P</th><th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="action-bar">
+                        <button class="btn btn-success" onclick="processPayment()"><i class="fas fa-check-circle"></i> Proses Pembayaran</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DATA MURID -->
+        <div id="datamurid" class="section">
+            <div class="section-title"><h2>Data Murid</h2><p>Ubah, tambah, atau hapus data murid</p></div>
+            <div class="card">
+                <div class="filter-group">
+                    <div class="input-group">
+                        <label>Cari Nama</label>
+                        <input type="text" id="muridSearch" oninput="renderMuridTable()" placeholder="Ketik nama murid...">
+                    </div>
+                    <div class="input-group">
+                        <label>Filter Kelas</label>
+                        <select id="muridFilterKelas" onchange="renderMuridTable()">
+                            <option value="">-- Semua Kelas --</option>
+                            <option value="1">Kelas 1</option><option value="2">Kelas 2</option><option value="3">Kelas 3</option>
+                            <option value="4">Kelas 4</option><option value="5">Kelas 5</option><option value="6">Kelas 6</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="openAddModal()"><i class="fas fa-plus"></i> Tambah Murid</button>
+                </div>
+                <div class="table-responsive" style="margin-top:16px;">
+                    <table id="muridTable">
+                        <thead><tr><th>Nama Murid</th><th>Kelas</th><th>L/P</th><th>IMDA</th><th style="text-align:right;">Aksi</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <p id="muridCount" style="margin-top:12px; font-size:13px; color:var(--muted);"></p>
+            </div>
+        </div>
+
+        <!-- SET BIAYA -->
+        <div id="setbiaya" class="section">
+            <div class="section-title"><h2>Set Biaya IMDA</h2><p>Isi nominal biaya IMDA untuk setiap kelas</p></div>
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="fee-table">
+                        <thead><tr><th>Kelas</th><th>Biaya IMDA (Rp)</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Kelas 1</strong></td><td><input type="text" inputmode="numeric" id="fee_1" class="fee-input currency-input" placeholder="0"></td></tr>
+                            <tr><td><strong>Kelas 2</strong></td><td><input type="text" inputmode="numeric" id="fee_2" class="fee-input currency-input" placeholder="0"></td></tr>
+                            <tr><td><strong>Kelas 3</strong></td><td><input type="text" inputmode="numeric" id="fee_3" class="fee-input currency-input" placeholder="0"></td></tr>
+                            <tr><td><strong>Kelas 4</strong></td><td><input type="text" inputmode="numeric" id="fee_4" class="fee-input currency-input" placeholder="0"></td></tr>
+                            <tr><td><strong>Kelas 5</strong></td><td><input type="text" inputmode="numeric" id="fee_5" class="fee-input currency-input" placeholder="0"></td></tr>
+                            <tr><td><strong>Kelas 6</strong></td><td><input type="text" inputmode="numeric" id="fee_6" class="fee-input currency-input" placeholder="0"></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="action-bar">
+                    <button class="btn btn-primary" onclick="saveAllFees()"><i class="fas fa-save"></i> Simpan Semua Biaya</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- BELANJA -->
+        <div id="belanja" class="section">
+            <div class="section-title"><h2>Pengeluaran / Belanja</h2><p>Catat pengeluaran yang mengurangi saldo kas</p></div>
+            <div class="card">
+                <div class="filter-group">
+                    <div class="input-group" style="flex:2;"><label>Keterangan Belanja</label><input type="text" id="expenseDesc" placeholder="Contoh: Beli ATK"></div>
+                    <div class="input-group" style="flex:1;"><label>Nominal (Rp)</label><input type="text" inputmode="numeric" id="expenseAmount" class="currency-input" placeholder="0"></div>
+                </div>
+                <div class="action-bar">
+                    <button class="btn btn-danger" onclick="addExpense()"><i class="fas fa-receipt"></i> Catat Pengeluaran</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL EDIT / TAMBAH MURID -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">Edit Murid</h3>
+                <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group"><label>Nama Lengkap</label><input type="text" id="editName" placeholder="Nama murid"></div>
+                <div class="input-group"><label>Kelas</label>
+                    <select id="editClass">
+                        <option value="1">Kelas 1</option><option value="2">Kelas 2</option><option value="3">Kelas 3</option>
+                        <option value="4">Kelas 4</option><option value="5">Kelas 5</option><option value="6">Kelas 6</option>
+                    </select>
+                </div>
+                <div class="input-group"><label>Jenis Kelamin</label>
+                    <select id="editGender">
+                        <option value="Laki-laki">Laki-laki</option>
+                        <option value="Perempuan">Perempuan</option>
+                    </select>
+                </div>
+                <label class="check-row" id="resetRow" style="display:none;">
+                    <input type="checkbox" id="editResetPaid"> Reset status pembayaran IMDA menjadi "Belum Bayar"
+                </label>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" onclick="closeModal()">Batal</button>
+                <button class="btn btn-primary" onclick="saveStudentEdit()"><i class="fas fa-save"></i> Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAV (MODE HP) -->
+    <nav class="bottom-nav">
+        <button class="bn-item active" data-section="dashboard" onclick="showSection('dashboard')"><i class="fas fa-chart-pie"></i><span>Dashboard</span></button>
+        <button class="bn-item" data-section="bayar" onclick="showSection('bayar')"><i class="fas fa-money-check-dollar"></i><span>Bayar</span></button>
+        <button class="bn-item" data-section="datamurid" onclick="showSection('datamurid')"><i class="fas fa-user-pen"></i><span>Murid</span></button>
+        <button class="bn-item" data-section="setbiaya" onclick="showSection('setbiaya')"><i class="fas fa-sliders"></i><span>Biaya</span></button>
+        <button class="bn-item" data-section="belanja" onclick="showSection('belanja')"><i class="fas fa-cart-shopping"></i><span>Belanja</span></button>
+    </nav>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+</body>
+</html>
